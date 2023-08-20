@@ -1,14 +1,19 @@
 use std::io::{self};
 
+use crate::terminal::Terminal;
 use termion::event::Key;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-use crate::terminal::Terminal;
+pub struct Position {
+    pub x: usize,
+    pub y: usize,
+}
 
 pub struct Editor {
     should_quit: bool,
     terminal: Terminal,
+    cursor_position: Position,
 }
 
 impl Editor {
@@ -16,6 +21,7 @@ impl Editor {
         Self {
             should_quit: false,
             terminal: Terminal::default().expect("Failed to initialize terminal"),
+            cursor_position: Position { x: 0, y: 0 },
         }
     }
 
@@ -35,14 +41,14 @@ impl Editor {
 
     fn refresh_screen(&self) -> Result<(), io::Error> {
         Terminal::cursor_hide();
-        Terminal::cursor_position(0, 0);
+        Terminal::cursor_position(&self.cursor_position);
 
         if self.should_quit {
             Terminal::clear_screen();
             println!("Goodbye.\r");
         } else {
             self.draw_rows();
-            Terminal::cursor_position(0, 0);
+            Terminal::cursor_position(&self.cursor_position);
         }
 
         Terminal::cursor_show();
@@ -52,8 +58,17 @@ impl Editor {
     fn process_keypress(&mut self) -> Result<(), io::Error> {
         let pressed_key = Terminal::read_key()?;
 
-        if let Key::Ctrl('q') = pressed_key {
-            self.should_quit = true;
+        match pressed_key {
+            Key::Ctrl('q') => self.should_quit = true,
+            Key::Up
+            | Key::Down
+            | Key::Left
+            | Key::Right
+            | Key::PageUp
+            | Key::PageDown
+            | Key::End
+            | Key::Home => self.move_cursor(pressed_key),
+            _ => (),
         }
 
         Ok(())
@@ -84,5 +99,32 @@ impl Editor {
         welcome_message = format!("~{}{}", spaces, welcome_message);
         welcome_message.truncate(width);
         println!("{}\r", welcome_message);
+    }
+
+    fn move_cursor(&mut self, key: Key) {
+        let Position { mut x, mut y } = self.cursor_position;
+        let height = self.terminal.size().height as usize;
+        let width = self.terminal.size().width as usize;
+
+        match key {
+            Key::Up => y = y.saturating_sub(1),
+            Key::Down => {
+                if y < height {
+                    y = y.saturating_add(1)
+                }
+            }
+            Key::Left => x = x.saturating_sub(1),
+            Key::Right => {
+                if x < width {
+                    x = x.saturating_add(1)
+                }
+            }
+            Key::PageUp => y = 0,
+            Key::PageDown => y = height,
+            Key::End => x = width,
+            Key::Home => x = 0,
+            _ => {}
+        }
+        self.cursor_position = Position { x, y }
     }
 }
