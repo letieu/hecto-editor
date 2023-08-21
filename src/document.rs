@@ -1,3 +1,5 @@
+use std::{fs, io};
+
 use crate::row::Row;
 
 #[derive(Default)]
@@ -6,11 +8,11 @@ pub struct Document {
 }
 
 impl Document {
-    pub fn open(file_path: &str) -> Self {
-        let mut rows = Vec::new();
-        rows.push(Row::from("Hello, World!"));
+    pub fn open(file_path: &str) -> io::Result<Self> {
+        let content = fs::read_to_string(file_path)?;
+        let rows = content.lines().map(Row::from).collect();
 
-        Self { rows }
+        Ok(Self { rows })
     }
 
     pub fn row(&self, index: usize) -> Option<&Row> {
