@@ -65,7 +65,10 @@ impl Editor {
             println!("Goodbye.\r");
         } else {
             self.draw_rows();
-            Terminal::cursor_position(&self.cursor_position);
+            Terminal::cursor_position(&Position {
+                x: self.cursor_position.x.saturating_sub(self.offset.x),
+                y: self.cursor_position.y.saturating_sub(self.offset.y),
+            })
         }
 
         Terminal::cursor_show();
@@ -135,7 +138,12 @@ impl Editor {
         let Position { mut x, mut y } = self.cursor_position;
 
         let height = self.document.len();
-        let width = self.terminal.size().width as usize;
+
+        let mut width = if let Some(row) = self.document.row(y) {
+            row.len()
+        } else {
+            0
+        };
 
         match key {
             Key::Up => y = y.saturating_sub(1),
@@ -144,10 +152,22 @@ impl Editor {
                     y = y.saturating_add(1)
                 }
             }
-            Key::Left => x = x.saturating_sub(1),
+            Key::Left => {
+                if x > 0 {
+                    x = x.saturating_sub(1)
+                } else if y > 0 {
+                    y = y.saturating_sub(1);
+                    x = self.document.row(y).unwrap().len();
+                } else {
+                    x = 0;
+                }
+            }
             Key::Right => {
                 if x < width {
                     x = x.saturating_add(1)
+                } else if y < height {
+                    y = y.saturating_add(1);
+                    x = 0;
                 }
             }
             Key::PageUp => y = 0,
@@ -156,6 +176,16 @@ impl Editor {
             Key::Home => x = 0,
             _ => {}
         }
+
+        width = if let Some(row) = self.document.row(y) {
+            row.len()
+        } else {
+            0
+        };
+        if x > width {
+            x = width;
+        }
+
         self.cursor_position = Position { x, y }
     }
 
