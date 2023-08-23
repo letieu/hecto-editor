@@ -140,7 +140,7 @@ impl Editor {
         let height = self.document.len();
 
         let mut width = if let Some(row) = self.document.row(y) {
-            row.len()
+            row.len
         } else {
             0
         };
@@ -157,7 +157,7 @@ impl Editor {
                     x = x.saturating_sub(1)
                 } else if y > 0 {
                     y = y.saturating_sub(1);
-                    x = self.document.row(y).unwrap().len();
+                    x = self.document.row(y).unwrap().len;
                 } else {
                     x = 0;
                 }
@@ -178,7 +178,7 @@ impl Editor {
         }
 
         width = if let Some(row) = self.document.row(y) {
-            row.len()
+            row.len
         } else {
             0
         };
