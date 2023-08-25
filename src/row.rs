@@ -21,9 +21,17 @@ impl Row {
         let start = cmp::min(start, end);
 
         let mut result = String::new();
-        self.string[..].graphemes(true).skip(start).take(end - start).for_each(|grapheme| {
-            result.push_str(grapheme);
-        });
+        self.string[..]
+            .graphemes(true)
+            .skip(start)
+            .take(end - start)
+            .for_each(|grapheme| {
+                if grapheme == "\t" {
+                    result.push_str(" ");
+                } else {
+                    result.push_str(grapheme);
+                }
+            });
 
         result
     }
