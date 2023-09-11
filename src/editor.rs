@@ -265,18 +265,18 @@ impl Editor {
 
         status = format!("{} - {} lines", file_name, self.document.len());
 
-        let line_indicator = format!(
-            "{}/{}",
+        let cursor_indicator = format!(
+            "{}:{}",
             self.cursor_position.y.saturating_add(1),
-            self.document.len()
+            self.cursor_position.x.saturating_add(1)
         );
 
-        let len = status.len() + line_indicator.len();
+        let len = status.len() + cursor_indicator.len();
         if width > len {
             status.push_str(&" ".repeat(width - len));
         }
 
-        status = format!("{}{}", status, line_indicator);
+        status = format!("{}{}", status, cursor_indicator);
         status.truncate(width);
 
         Terminal::set_bg_color(STATUS_BG_COLOR);
