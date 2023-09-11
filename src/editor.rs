@@ -128,6 +128,9 @@ impl Editor {
     fn draw_rows(&self) {
         let height = self.terminal.size().height;
 
+        // move cursor to the top left corner
+        Terminal::cursor_position(&Position { x: 0, y: 0 });
+
         for terminal_row in 0..height {
             Terminal::clear_current_line();
             if let Some(row) = self.document.row(terminal_row as usize + self.offset.y) {
